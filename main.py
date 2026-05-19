@@ -10,24 +10,19 @@ veza_sa_dockerom = requests.Session()
 app.config['SERVER_NAME'] = '127.0.0.1:9000' #waf
 TARGET_URL = "http://127.0.0.1:80" #dvwa
 
-commonPathTraversalWords = frozenset(["etc","passwd","proc","root","ssh","shadow","config","//",".."])
+commonPathTraversalWords = frozenset(["etc","passwd","proc","root","ssh","shadow","config","//","..","var","log"])
 #TODO dodati white list za situacije poput http://testsite.com/get.php?f=list
 
 def decoding(putanja):
 
     prevStr = ""
-    currStr = toLowerCase(putanja)
+    currStr = currStr.lower()
 
     while prevStr != currStr:
         prevStr = currStr
         currStr = urllib.parse.unquote(currStr)
 
     return currStr
-
-def toLowerCase(putanja):
-
-    lowerCaseUrl = putanja.lower()
-    return lowerCaseUrl
 
 def checkCommonWords(putanja):
 
@@ -57,7 +52,7 @@ def checkUrl(putanja):
 
     for char in putanja:
         if char.isupper():
-            putanja = toLowerCase(putanja)
+            putanja = putanja.lower()
             break
 
     if checkPercent(putanja):
@@ -84,7 +79,7 @@ def checkCookie():
         return False
 
     strCookie = str(currCookie)
-    strCookie = toLowerCase(strCookie)
+    strCookie = strCookie.lower()
 
     if checkPercent(strCookie):
         strCookie = decoding(strCookie)
@@ -109,7 +104,7 @@ def checkParametarValue(url):
 
         for singleVal in args:
 
-            singleVal = toLowerCase(singleVal)
+            singleVal = singleVal.lower()
 
             if checkPercent(singleVal):
                 singleVal = decoding(singleVal)
