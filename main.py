@@ -16,13 +16,18 @@ commonPathTraversalWords = frozenset(["etc","passwd","proc","root","ssh","shadow
 def decoding(putanja):
 
     prevStr = ""
-    currStr = currStr.lower()
+    currStr = toLowerCase(putanja)
 
     while prevStr != currStr:
         prevStr = currStr
         currStr = urllib.parse.unquote(currStr)
 
     return currStr
+
+def toLowerCase(putanja):
+
+    lowerCaseUrl = putanja.lower()
+    return lowerCaseUrl
 
 def checkCommonWords(putanja):
 
@@ -52,7 +57,7 @@ def checkUrl(putanja):
 
     for char in putanja:
         if char.isupper():
-            putanja = putanja.lower()
+            putanja = toLowerCase(putanja)
             break
 
     if checkPercent(putanja):
@@ -79,7 +84,7 @@ def checkCookie():
         return False
 
     strCookie = str(currCookie)
-    strCookie = strCookie.lower()
+    strCookie = toLowerCase(strCookie)
 
     if checkPercent(strCookie):
         strCookie = decoding(strCookie)
@@ -104,7 +109,7 @@ def checkParametarValue(url):
 
         for singleVal in args:
 
-            singleVal = singleVal.lower()
+            singleVal = toLowerCase(singleVal)
 
             if checkPercent(singleVal):
                 singleVal = decoding(singleVal)
