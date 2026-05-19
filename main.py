@@ -41,7 +41,7 @@ def checkExternalSite(putanja):
 
     isExternalSite = False
 
-    if putanja.count("http") > 1 or putanja.count("https") > 1 or putanja.count("php") > 1:
+    if putanja.count(".http") > 1 or putanja.count(".https") > 1 or putanja.count(".php") > 1:
         isExternalSite = True
 
     return isExternalSite
