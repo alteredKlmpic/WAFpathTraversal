@@ -10,18 +10,6 @@ TARGET_URL = "http://127.0.0.1:80" #dvwa
 
 
 def proveri_saobracaj(putanja, parametri):
-    """
-    WAF logika za inspekciju saobraćaja.
-    Ako detektuje '..' u putanji ili u bilo kom GET parametru, vraća True (Blokiraj).
-    """
-    # 1. Provera same putanje u URL-u
-    if ".." in putanja:
-        return True
-
-    # 2. Provera svih GET parametara (npr. ?page=../../)
-    for kljuc, vrednost in parametri.items():
-        if ".." in str(vrednost):
-            return True
 
     return False
 
