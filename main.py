@@ -53,7 +53,7 @@ def proxy(path):
             data=request.get_data(),
             cookies=request.cookies,
             allow_redirects=False,
-            timeout = 50
+            timeout = 5
         )
     except requests.exceptions.Timeout:
         return "504 Gateway Timeout, previse vremena je trebalo", 504
