@@ -1,5 +1,6 @@
 import requests
-import urlib.parse
+import urllib.request
+import urllib.parse
 from flask import Flask, request, Response
 
 app = Flask(__name__)
@@ -10,13 +11,13 @@ app.config['SERVER_NAME'] = '127.0.0.1:9000'
 # Gde se nalazi naša ranjiva aplikacija (Docker sada uspešno sluša na portu 80):
 TARGET_URL = "http://127.0.0.1:80"
 
-commonPathTraversalWords = frozenset(["etc","passwd","proc","root","ssh","shadow","config","//","..","main"])
+commonPathTraversalWords = frozenset(["etc","passwd","proc","root","ssh","shadow","config","//",".."])
 #TODO dodati white list za situacije poput http://testsite.com/get.php?f=list
 
 def decoding(putanja):
 
     prevStr = ""
-    currStr = putanja
+    currStr = toLowerCase(putanja)
 
     while prevStr != currStr:
         prevStr = currStr
@@ -29,6 +30,30 @@ def toLowerCase(putanja):
     lowerCaseUrl = putanja.lower()
     return lowerCaseUrl
 
+def checkCommonWords(putanja):
+
+    if any(word in putanja for word in commonPathTraversalWords):
+        return True
+    else:
+        return False
+
+
+def checkExternalSite(putanja):
+
+    isExternalSite = False
+
+    if putanja.count("http") > 1 or putanja.count("https") > 1 or putanja.count("php") > 1:
+        isExternalSite = True
+
+    return isExternalSite
+
+def checkPercent(putanja):
+
+    if "%" in putanja:
+        return True
+    else:
+        return False
+
 def checkUrl(putanja):
 
     for char in putanja:
@@ -36,14 +61,17 @@ def checkUrl(putanja):
             putanja = toLowerCase(putanja)
             break
 
-    if "%" in putanja:
+    if checkPercent(putanja):
         putanja = decoding(putanja)
 
-    if any(word in putanja for word in commonPathTraversalWords):
+    if checkExternalSite(putanja) or checkCommonWords(putanja):
         return True
 
-    if putanja.count("http") > 1 or putanja.count("https") > 1 or putanja.count("php") > 1:
-        return True
+    # if any(word in putanja for word in commonPathTraversalWords):
+    #     return True
+
+    # if putanja.count("http") > 1 or putanja.count("https") > 1 or putanja.count("php") > 1:
+    #     return True
 
     return False
 
@@ -51,23 +79,46 @@ def checkUrl(putanja):
 
 def checkCookie():
 
-    cookie = request.cookies.get("session_token")
+    currCookie = request.cookies
 
-    if "%" in cookie:
-        cookie = decoding(cookie)
+    if not currCookie:
+        return False
 
-    if any(word in cookie for word in commonPathTraversalWords):
+    strCookie = str(currCookie)
+    strCookie = toLowerCase(strCookie)
+
+    if checkPercent(strCookie):
+        strCookie = decoding(strCookie)
+
+    if checkExternalSite(strCookie) or checkCommonWords(strCookie):
         return True
+
+    # if "%" in cookie:
+    #     cookie = decoding(cookie)
+    #
+    # if any(word in cookie for word in commonPathTraversalWords):
+    #     return True
 
     return False
 
-@app.route("/admin-panel")
-def isAdmin():
+def checkParametarValue(url):
 
-    if session.get("is_admin") == True:
-        return True
-    else:
-        return False
+    parsed_url = urllib.parse.urlparse(url)
+    urlArgs = urllib.parse.parse_qs(parsed_url.query)
+
+    for args in urlArgs.values():
+
+        for singleVal in args:
+
+            singleVal = toLowerCase(singleVal)
+
+            if checkPercent(singleVal):
+                singleVal = decoding(singleVal)
+
+            if checkCommonWords(singleVal) or checkExternalSite(singleVal):
+                return True
+
+    return False
 
 def proveri_saobracaj(putanja, parametri):
     """
@@ -75,11 +126,11 @@ def proveri_saobracaj(putanja, parametri):
     Ako detektuje '..' u putanji ili u bilo kom GET parametru, vraća True (Blokiraj).
     """
 
-    if not isAdmin():
-       if checkUrl(putanja) or checkCookie():
-           return True
+    if checkUrl(putanja) or checkCookie():
+        return True
 
-
+    if "=" in request.url and checkParametarValue(request.url):
+        return True
 
     return False
 
