@@ -84,7 +84,7 @@ def checkCookie():
         return False
 
     strCookie = str(currCookie)
-    strCookie = toLowerCase(strCookie)
+    strCookie = strCookie.lower()
 
     if checkPercent(strCookie):
         strCookie = decoding(strCookie)
